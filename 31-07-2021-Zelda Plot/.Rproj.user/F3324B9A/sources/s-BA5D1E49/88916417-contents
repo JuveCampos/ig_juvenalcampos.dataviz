@@ -1,0 +1,55 @@
+# Librerias: 
+library(tidyverse)
+library(rebus)
+library(ggpomological)
+
+# Checamos fuentes del sistema: 
+fuentes_Sys <- list.files("~/Library/Fonts/") %>% 
+  str_remove_all(pattern = "." %R% capture(one_or_more(WRD)) %R% END)
+fuentes_Sys
+
+# Bases de datos: 
+# Fuente: https://zelda.fandom.com/wiki/The_Legend_of_Zelda_-_Series_Sales
+# Consultada el 31 de julio del 2021
+bd <- readxl::read_xlsx("zelda_sales.xlsx", sheet = 2) %>%
+  arrange(year)
+
+bd$label <- factor(str_c(bd$Game,
+                         "\n(", bd$year, ")"),
+                   levels = str_c(bd$Game, "\n(",
+                                  bd$year, ")"))
+
+bd %>%
+  filter(!is.na(Millones_distribucion)) %>%
+  ggplot(aes(x =label, y = Millones_distribucion,
+             fill = factor(Remake))) +
+  geom_col() +
+  geom_text(aes(label = str_c(Millones_distribucion, "\nMillones")), 
+            size = 2.5, fontface = "bold", vjust = -0.1) + 
+  labs(y = "",
+       x = "", fill = "Tipo de juego", 
+       title = "Copias distribuidas de los juegos de The Legend Of Zelda",
+       subtitle = "1986-2020") +
+  theme_bw() +
+  scale_fill_manual(values = c("#3E646F", "#A6C08A")) +
+  # rgb(166,192,138, maxColorValue = 255)
+  # theme_pomological_fancy() +
+  scale_y_continuous(expand = expansion(c(0,0.1))) +
+  theme(
+    axis.text.x = element_text(angle = 45, 
+                               hjust = 1, 
+                               size = 8,
+                               family = "Arial",
+                               face = "bold"),
+        plot.title = element_text(family = "Arial"), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        legend.position = "bottom", 
+        panel.border = element_blank(), 
+    panel.grid = element_blank(), 
+    axis.ticks = element_blank(), 
+    plot.margin = unit(c(1,1,1,2), "cm")) + 
+  guides(fill = guide_legend(title.position = "top",
+                               title.hjust = 0.5))
+
+?plot.margin
