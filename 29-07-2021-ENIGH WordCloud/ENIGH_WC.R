@@ -24,8 +24,7 @@ bd <- search_tweets(query,  # Busqueda
 pal_num <- colorNumeric(palette = c("#FEe517",
                                     "#FDB419",
                                     "#DC985B",
-                                    "#435353"
-),
+                                    "#435353"),
 domain = c(0, 200),
 reverse = T)
 
@@ -97,7 +96,7 @@ create_wordcloud(data = bd$text,
 
 # args(create_wordcloud)
 # Si quieres guardar los datos
-openxlsx::write.xlsx(bd, "tweetsSismo.xlsx")
+openxlsx::write.xlsx(bd, "tweetsENIGH.xlsx")
 
 # # Stream de Tweets; muestra estadística de Tweets en tiempo real.
 # ?stream_tweets

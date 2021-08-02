@@ -97,7 +97,7 @@ create_wordcloud(data = bd$text,
 
 # args(create_wordcloud)
 # Si quieres guardar los datos
-openxlsx::write.xlsx(bd, "tweetsSismo.xlsx")
+openxlsx::write.xlsx(bd, "tweetsENIGH.xlsx")
 
 # # Stream de Tweets; muestra estadística de Tweets en tiempo real.
 # ?stream_tweets
