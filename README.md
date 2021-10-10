@@ -8,3 +8,7 @@ Este repositorio esta hecho para guardar algunos de los códigos que genere para
 
 * Agosto 2021: https://juvenalcampos.com/2021/08/31/mis-visualizaciones-de-agosto-2021/
 
+* Septiembre: https://juvenalcampos.com/2021/10/03/mis-visualizaciones-de-septiembre-2021/
+
+![](https://juvenalcampos.com/2021/10/03/mis-visualizaciones-de-septiembre-2021/images/banner.png)
+
