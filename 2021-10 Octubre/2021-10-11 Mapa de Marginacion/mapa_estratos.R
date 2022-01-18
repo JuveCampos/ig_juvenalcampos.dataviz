@@ -133,12 +133,12 @@ str_c(root, list.files(root)) %>%
 #   filter(NOM_ENT == "Ciudad de México") %>%
 #   leaflet() %>%
 #   addProviderTiles(providers$CartoDB.Positron) %>%
-#   addPolygons(fillColor = pal_colores2(map$GM_2020),
-#               color = "white",
-#               label = map$GM_2020,
-#               fillOpacity = 0.9,
-#               weight = 0.1,
-#               opacity = 0.9) %>%
+  # addPolygons(fillColor = pal_colores2(map$GM_2020),
+  #             color = "white",
+  #             label = map$GM_2020,
+  #             fillOpacity = 0.9,
+  #             weight = 0.1,
+  #             opacity = 0.9) %>%
 #   addLegend(position = "bottomright",
 #             title = "Grado de Marginación<br>CONAPO, 2020",
 #             pal = pal_colores2,

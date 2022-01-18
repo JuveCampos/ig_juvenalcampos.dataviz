@@ -27,6 +27,14 @@ d1 = read_csv("/Volumes/Extreme SSD/DATASETS/INEGI - DENUE/DENUE/DENUE/DENUE_COM
   filter(entidad %in% c("CIUDAD DE MÉXICO", "MÉXICO" , "MORELOS", "PUEBLA", "TLAXCALA")) %>%
   filter(nombre_act == "Restaurantes con servicio de preparación de tacos y tortas")
 
+d2 <- read_csv("/Volumes/Extreme SSD/DATASETS/INEGI - DENUE/DENUE/DENUE/DENUE_COMIDA/denue_00_72_1_csv/conjunto_de_datos/denue_inegi_72_1.csv",
+               locale = locale(encoding = "WINDOWS-1252")) %>%
+  filter(entidad %in% c("CIUDAD DE MÉXICO")) %>%
+  filter(nombre_act == "Restaurantes con servicio de preparación de tacos y tortas")
+
+saveRDS(d2, "tacos_cdmx.rds")
+
+
 # unique(d1$entidad)
 
 d2 = read_csv("/Volumes/Extreme SSD/DATASETS/INEGI - DENUE/DENUE/DENUE/DENUE_COMIDA/denue_00_72_2_csv/conjunto_de_datos/denue_inegi_72_2.csv",

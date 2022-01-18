@@ -26,7 +26,7 @@ data = unique(bd$text)
 stop_words = c()
 num_words = 300
 background = "white"
-mask = "apple.png"
+# mask = "apple.png"
 tamanio = 0.5
 
 # create_wordcloud <- function(data,
@@ -113,7 +113,4 @@ tamanio = 0.5
 # create_wordcloud(data = bd$text,
 #                  num_words = 200,
 #                  tamanio = 1)
-
-
-
 
