@@ -38,7 +38,6 @@ jenkifyer <- function(x, groups = 5, etiquetas = 1:5){
 bd <- read_csv("defunciones_covid.csv")
 
 
-
 # Hacemos pivot_longer a nuestros datos:
 datos = bd %>%
   pivot_longer(cols = 4:ncol(.),
