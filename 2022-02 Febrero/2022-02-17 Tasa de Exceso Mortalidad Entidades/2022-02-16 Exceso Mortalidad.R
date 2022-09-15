@@ -38,6 +38,14 @@ em <- tibble::tribble(
         ) %>%
   filter(entidad != "Nacional")
 
+
+em %>%
+  arrange(-tasa) %>%
+  transmute(entidad,
+            rank = rank(-tasa)) %>%
+  View()
+
+
 # Gráfica: ----
 em %>%
   ggplot(aes(x = reorder(entidad, tasa),
@@ -66,6 +74,7 @@ em %>%
         plot.title.position = "plot",
         plot.subtitle = element_text(family = "Mulish", size = 9, hjust = 0.5),
         plot.caption = element_text(size = 5))
+
 
 
 # Guardamos ---------------------------------------------------------------

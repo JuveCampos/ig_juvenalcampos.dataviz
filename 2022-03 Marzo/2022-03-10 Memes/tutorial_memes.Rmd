@@ -1,0 +1,256 @@
+---
+title: "memescrapeando twitter"
+author: "Juvenal Campos"
+date: "3/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Una idea que siempre he tenido en mente es que R (#rstats) no es un lenguaje solo para la estadística. R [es un lenguaje de programación](https://en.wikipedia.org/wiki/R_(programming_language)) que, además de ayudarnos en hacer estadística y econometría, nos sirve para hacer muchas otras cositas. 
+
+Para este tutorial/laboratorio, vamos a usar las capacidades de R para entrar a Twitter para descargar memes en español publicados en las últimas horas. 
+
+# 1. Requerimientos: 
+
+Para iniciar, requerimos tener lo siguiente: 
+
+1) R y RStudio instalados. 
+
+2) La librería `rtweet` y una cuenta de Twitter. 
+
+3) El `tidyverse` (o el sabor de R que más te guste, aunque en este tutorial utilizaremos ese)
+
+y ya. 
+
+# 2. Iniciamos a escribir código. 
+
+Iniciaremos llamando a las librerías que vamos a utilizar, las cuales serían las siguientes: 
+
+```{r cache=FALSE,warning=FALSE,message=FALSE}
+# Librerias: 
+library(tidyverse) # Para manejo de datos
+library(rtweet)    # Para descargar datos de Twitter
+library(magick)    # Para hacer gifs
+library(jpeg)      # Para utilizar funciones para manipular imagenes
+```
+
+
+# 3. Obtenemos los datos de Twitter. 
+
+Para obtener datos sobre lo que la gente publica en Twitter, necesitamos acceder a su API. Para acceder a su API de forma sencilla, la comunidad de #Rstats ha creado el paquete [`rtweet`](https://github.com/ropensci/rtweet), el cual se encarga de simplificar la interacción con este servicio a la utilización de funciones de R de las de toda la vida (si has interactuado con APIs en R antes, recordarás que suele ser un tema algo complejo, por lo menos al principio). 
+
+En este caso, lo que vamos a hacer será buscar todos los tweets que contengan la palabra `"meme"` y que esten en español. Para esto, nos podemos ayudar de la herramienta de [`busqueda avanzada`](https://twitter.com/search-advanced?lang=es) de Twitter, la cual simplifica la formulación de busquedas avanzadas dentro de la Red Social. 
+
+La consulta quedaría entonces como `memes lang:es`. La guardamos en un objeto llamado `termino`. 
+
+```{r}
+# Termino de busqueda: 
+termino <- "memes lang:es"
+```
+
+Y metemos el término dentro de nuestra función para descargar Tweets: 
+
+```{r eval=FALSE}
+bd <- rtweet::search_tweets(q = termino,       # Término de busquyeda
+                      n = 10000,               # Numero de Tweets a descargar
+                      include_rts = FALSE,     # Incluir Retweets? 
+                      retryonratelimit = TRUE) # Reintentar cuando se sobrepase el límite de consulta. 
+```
+
+Hay que mencionar que el API de Twitter nos permite descargar aproximadamente 15,000 tweets cada 15 minutos, por lo que, si de repente quisieramos buscar algún tema más complejo, hay que tener en cuenta que nuestra descarga puede quedarse trabajando un buen rato. Igualmente, el API gratuito solamente nos permite descargar tweets de los últimos 7 días, por lo que también hay que tener eso en cuenta. 
+
+La descarga toma un rato, y la barra de descarga suele verse así cuando está trabajando: 
+
+```
+Downloading [==============>-----]  45%
+```
+
+Una vez que tenemos los datos, mas vale guardarlos (por cualquier cosa). Para esto, los vamos a guardar en un excel con la siguiente función: 
+
+```{r eval = FALSE}
+openxlsx::write.xlsx(bd, str_c("memes_de_twitter.xlsx"))
+```
+
+```{r echo=FALSE}
+bd <- readxl::read_xlsx("memes_de_twitter.xlsx")
+```
+
+Lo que guardará los datos en un archivo en nuestro directorio de trabajo (el cual tienes que tener bien ubicado). 
+
+Y ya. Tenemos los datos. 
+
+# 4. Explorando los datos: 
+
+Ahora exploramos la información que tenemos: 
+
+```{r}
+# Primeros renglones
+head(bd)
+
+# Nombres de las variables: 
+names(bd)
+
+# Dimensión de la tabla: 
+dim(bd)
+```
+
+Como podemos observar, la base tiene 18,000 tweets (eso son muchos memes) por lo que lo más conveniente va a ser ordenarlos por el numero de likes (la variable `favorite count`) y quedarnos con los 200 memes más likeados (y aún así siguen siendo muchos). Los memes se pueden visitar con los datos de la columna `media_url`, la cual contiene una liga hacia la dirección donde se almacena el contenido multimedia de cada post. 
+
+```{r}
+# Nos quedamos con los 200 memes más likeados: 
+doscientos_memes <- bd %>% 
+  arrange(-favorite_count) %>% # Ordenar de mayor a menor
+  head(n = 200) # Nos quedamos con los primeros 200
+```
+
+# 5. Descarga: 
+
+Una vez que tenemos estos 200 memes mas likeados, vamos a descargarlos a una carpeta. 
+
+Para crear carpetas en R, utilizamos la función `dir.create()`. 
+
+```{r eval = FALSE}
+dir.create("200 memes")
+```
+
+Extraemos la dirección de los memes como vector de texto: 
+
+```{r}
+direccion_memes <- doscientos_memes$media_url %>% 
+  unique() %>%  # Para no duplicar
+  unlist() # Los deslistamos. 
+length(direccion_memes) # Ya se hicieron menos 
+```
+
+Y los descargamos: 
+
+```{r, eval = FALSE}
+# Bucle elegante para la descarga de los memes
+map(.x = seq_along(direccion_memes), # Genera una serie de numeros que va del 1 a la longitud del vector de interés
+    .f = function(i){
+      curl::curl_download(url = direccion_memes[i], # El link de descarga
+                          destfile = str_glue("200 memes/{i}.jpg") # Cada imagen va a llevar un numero, de acuerdo a su turno de descarga
+                          )
+    })
+```
+
+
+Si ejecutaste esta función, probablemente te salió un error. Para tratar de solucionarlo (o darla la vuelta) tenemos dos opciones: o corregimos lo que esta mal o lo ignoramos y nos pasamos a lo que sigue ( _tan como la vida_). Como este ejercicio no es tan riguroso, vamos a tratar de darle la vuelta. Para esto, utilizaremos la función `tryCatch`, que nos permite evaluar funciones en las que todo sale bien y avisar en los casos en los que algo sale mal. 
+
+```{r eval=FALSE}
+# Mejoramos el código del chunk anterior: 
+map(.x = seq_along(direccion_memes), # Genera una serie de numeros que va del 1 a la longitud del vector de interés
+    .f = function(i){
+      tryCatch({
+        # Lo que debe hacer si todo sale bien: 
+          curl::curl_download(url = direccion_memes[i], # El link de descarga
+                              destfile = str_glue("200 memes/{i}.jpg") # Cada imagen va a llevar un numero, de acuerdo a su turno de descarga
+                              )  
+      }, error = function(e){
+        # Para que nos avise si hubo algun error, y en donde: 
+        print(str_c("Hubo un error en la descarga del meme ", i, " T_T"))
+      }
+    )
+  })
+```
+
+Y así ya tenemos nuestra carpeta llena de imagenes. 
+
+# 6. Limpieza manual
+
+Como los memes provienen de Twitter, es obvio que no se espera que sean grandes memes. Para esto, vamos a quitar, manualmente, aquellos memes que no den gracia, o que sean políticamente incorrectos, o que no cumplan con nuestros altos estándares de humor. 
+
+...
+
+Después de revisar manualmente las mas de 100 imagenes (y de ver memes malísimos) llegué a una selección de 31 imagenes medianamente graciosas `¯\_(ツ)_/¯` para compartir en Redes sociales. Con estas imagenes vamos a armar un GIF para compartirlas todas juntas. 
+
+# 7. Armado del GIF: 
+
+Para armar un gif se requiere que todas las imagenes que lo van a conformar sean de dimensiones similares; si hacemos un GIF con imagenes de distintos tamaños nos va a quedar un gif feo de ver. Para ver las dimensiones de las imagenes de nuestra carpeta, hacemos lo siguiente: 
+
+```{r eval=FALSE}
+# Creamos un vector con la ubicación de las imagenes: 
+imagenes <- str_c("200 memes/", list.files("200 memes//"))
+
+# Generamos la tabla de dimensiones: 
+dimensiones <- lapply(seq_along(imagenes),
+       function(x){
+         tryCatch({readJPEG(imagenes[x]) %>%
+             dim() %>%
+             append(imagenes[x])},
+                  error = function(e){
+                    print(str_c("error en", x))
+                  })
+         }) %>%
+  do.call(rbind.data.frame, .)
+
+# Cambiamos los nombres de la tabla: 
+names(dimensiones) <- c("altura", "anchura", ".", "imagen")
+
+# Visualizamos las dimensiones: 
+dimensiones %>% as_tibble()
+
+```
+
+
+Como queda claro de arriba, las imagenes tienen dimensiones muy variadas, y eso nos dificultará generar un gif de calidad. Para homogeneizar los tamaños, vamos a rehacerlas con unas dimensiones de 900x900 píxeles (sugerencia, pero se puede usar cualquier otra dimensión). 
+
+```{r eval=FALSE}
+
+# Creamos una nueva carpeta para las imagenes que estan bien: 
+dir.create("imagenes_bien")
+
+# Bucle elegante para reformatear nuestras imagenes: 
+for (i in imagenes) {
+  tryCatch({
+  
+  # Leemos la imagen:
+  img <- readJPEG(i)
+  
+  # Generamos un nuevo nombre para la imagen: 
+  nuevo_nombre_imagen <- paste0("imagenes_bien/", i %>% str_remove(pattern = "imagenes|200 memes")) # Corre esto paso por paso para que veas que fue lo que se hizo aquí. 
+  
+  # Guardamos la nueva imagen en un formato cuadrado de 900x900: 
+  jpeg(nuevo_nombre_imagen,
+       width=900, height=900)
+  
+  # La ploteamos como raster (recordemos que las imagenes jpg son también matrices de puntos, como los rasters)
+  plot(as.raster(img))
+  dev.off()
+  
+  }, error = function(e){
+    
+    # En caso de que nos salga error: 
+    str_c("error en ", imagenes_magical[i])
+  })
+  
+}
+
+```
+
+Lo cual nos convertirá todas las imagenes de la carpeta previa en rectángulos de color blanco. 
+
+Ahora sí, con las imagenes correctas, armamos el gif. Si me siguen de antes, ya reconocerán este código para armar estas imagenes en movimiento: 
+
+```{r eval=FALSE}
+# CREACIÓN DEL GIF.
+# El gif se guardará en el directorio local: 
+str_c("imagenes_bien/", list.files("imagenes_bien/")) %>%
+  map(image_read) %>% # Lee rutas de los archivos.
+  image_join() %>% # Junta imágenes
+  image_animate(fps=2) %>% # Anima las imagenes, con 1 segundo entre imágenes.
+  image_write("memes.gif") # Escribe el gif en el directorio.
+```
+
+Y ya. Eso es todo. Tenemos nuestro GIF de memes. 
+
+# 8. Conclusiones: 
+
+Si bien el descargar memes pudiera parecer algo trivial (y lo es), vale la pena pensar en las aplicaciones de esto para otro tipo de temas (como buscar imagenes de manifestaciones en tiempo real, de visualizaciones de datos, de mapas o de otros temas más serios). Igualmente, esto es otro ejemplo de las aplicaciones de los datos de Twitter para hacer más y más variadas visualizaciones, aparte de los análisis típicos como las redes y las nubes de palabras. Practica con otro tema, con otra fecha y cuéntame en los coentarios como te fue. 
+
+¡Saludos! 
+
+**--Juvenal**
